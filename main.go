@@ -175,7 +175,30 @@ func main() {
 		return
 	}
 
+	// Create the open_vscode.bat file
+	batchFilePath := filepath.Join(moduleFolder, "open_vscode.bat")
+	batchFileContent := "code . | exit 0\n"
+	err = os.WriteFile(batchFilePath, []byte(batchFileContent), 0644)
+	if err != nil {
+		fmt.Println("Error creating open_vscode.bat file:", err)
+		return
+	}
+
+	// Execute the open_vscode.bat file
+	cmd = exec.Command("cmd", "/C", batchFilePath)
+	cmd.Dir = moduleFolder
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("Opening Visual Studio Code...")
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println("Error executing open_vscode.bat file:", err)
+		return
+	}
+
 	fmt.Printf("Module '%s' created successfully in folder '%s'.\n", moduleFullName, moduleFolder)
 	fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
 	fmt.Println("Git repository initialized successfully.")
+	fmt.Println("Visual Studio Code opened successfully.")
 }
