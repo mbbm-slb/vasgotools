@@ -162,6 +162,20 @@ func main() {
 		return
 	}
 
+	// Initialize a Git repository
+	cmd = exec.Command("git", "init")
+	cmd.Dir = moduleFolder
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("Initializing Git repository...")
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println("Error initializing Git repository:", err)
+		return
+	}
+
 	fmt.Printf("Module '%s' created successfully in folder '%s'.\n", moduleFullName, moduleFolder)
 	fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
+	fmt.Println("Git repository initialized successfully.")
 }
