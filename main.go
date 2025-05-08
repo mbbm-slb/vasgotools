@@ -4,6 +4,7 @@ import (
     "flag"
     "fmt"
     "os"
+    "os/exec"
     "path/filepath"
 )
 
@@ -52,5 +53,25 @@ func main() {
     fmt.Println("Subfolders containing go.mod:")
     for _, folder := range goModFolders {
         fmt.Println(folder)
+    }
+
+    // Run the "go work init" command with the relative paths
+    if len(goModFolders) > 0 {
+        args := append([]string{"work", "init"}, goModFolders...)
+        cmd := exec.Command("go", args...)
+        cmd.Dir = *folderPath // Set the working directory to the root folder
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+
+        fmt.Println("Running command:", cmd.String())
+        err := cmd.Run()
+        if err != nil {
+            fmt.Println("Error running 'go work init':", err)
+            return
+        }
+
+        fmt.Println("go.work file created successfully.")
+    } else {
+        fmt.Println("No subfolders with go.mod found. No go.work file created.")
     }
 }
