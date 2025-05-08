@@ -103,16 +103,16 @@ func generateWorkCommand(args []string) {
 func generateModuleCommand(args []string) {
 	// Define a flag set for the "generate-module" command
 	fs := flag.NewFlagSet("generate-module", flag.ExitOnError)
-	moduleName := fs.String("name", "", "Name of the module (required)")
 	folderPath := fs.String("path", "", "Path to create the module folder (defaults to current working directory)")
 	fs.Parse(args)
 
-	// Ensure the module name is provided
-	if *moduleName == "" {
+	// Ensure the module name is provided as the first positional argument
+	if fs.NArg() < 1 {
 		fmt.Println("Error: Module name is required.")
-		fs.Usage()
+		fmt.Println("Usage: go run main.go generate-module <name> [--path <path>]")
 		os.Exit(1)
 	}
+	moduleName := fs.Arg(0)
 
 	// Use the current working directory if no path is provided
 	if *folderPath == "" {
@@ -125,7 +125,7 @@ func generateModuleCommand(args []string) {
 	}
 
 	// Create the module folder
-	moduleFolder := filepath.Join(*folderPath, *moduleName)
+	moduleFolder := filepath.Join(*folderPath, moduleName)
 	err := os.MkdirAll(moduleFolder, 0755)
 	if err != nil {
 		fmt.Println("Error creating module folder:", err)
@@ -133,7 +133,7 @@ func generateModuleCommand(args []string) {
 	}
 
 	// Run the "go mod init" command
-	moduleFullName := "github.com/muellerbbm-vas/" + *moduleName
+	moduleFullName := "github.com/muellerbbm-vas/" + moduleName
 	cmd := exec.Command("go", "mod", "init", moduleFullName)
 	cmd.Dir = moduleFolder
 	cmd.Stdout = os.Stdout
