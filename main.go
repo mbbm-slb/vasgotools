@@ -9,9 +9,31 @@ import (
 )
 
 func main() {
-    // Define a command-line flag for the folder path
-    folderPath := flag.String("path", "", "Path to the folder (defaults to current working directory)")
-    flag.Parse()
+    // Ensure a subcommand is provided
+    if len(os.Args) < 2 {
+        fmt.Println("Usage: go run main.go <command> [options]")
+        fmt.Println("Available commands:")
+        fmt.Println("  generate-work  Generate a go.work file")
+        // Add more commands here as needed
+        os.Exit(1)
+    }
+
+    // Determine the subcommand
+    switch os.Args[1] {
+    case "generate-work":
+        generateWorkCommand(os.Args[2:])
+    default:
+        fmt.Printf("Unknown command: %s\n", os.Args[1])
+        fmt.Println("Use 'go run main.go' for usage.")
+        os.Exit(1)
+    }
+}
+
+func generateWorkCommand(args []string) {
+    // Define a flag set for the "generate-work" command
+    fs := flag.NewFlagSet("generate-work", flag.ExitOnError)
+    folderPath := fs.String("path", "", "Path to the folder (defaults to current working directory)")
+    fs.Parse(args)
 
     // Use the current working directory if no path is provided
     if *folderPath == "" {
