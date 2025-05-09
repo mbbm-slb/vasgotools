@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 )
 
 func main() {
@@ -113,16 +114,16 @@ func generateWorkCommand(args []string) {
 
 	// Create the open_vscode.bat file (if not suppressed)
 	if !noCode {
-		err = createOpenVSCodeBatchFile(*folderPath)
+		err = createOpenVSCodeFile(*folderPath)
 		if err != nil {
-			fmt.Println("Error creating open_vscode.bat file:", err)
+			fmt.Println("Error creating open_vscode file:", err)
 			return
 		}
 
-		// Execute the open_vscode.bat file
-		err = executeOpenVSCodeBatchFile(*folderPath)
+		// Execute the open_vscode file
+		err = executeOpenVSCodeFile(*folderPath)
 		if err != nil {
-			fmt.Println("Error executing open_vscode.bat file:", err)
+			fmt.Println("Error executing open_vscode file:", err)
 			return
 		}
 		fmt.Println("Visual Studio Code opened successfully.")
@@ -207,16 +208,16 @@ func main() {
 
 	// Create the open_vscode.bat file (if not suppressed)
 	if !noCode {
-		err = createOpenVSCodeBatchFile(moduleFolder)
+		err = createOpenVSCodeFile(moduleFolder)
 		if err != nil {
-			fmt.Println("Error creating open_vscode.bat file:", err)
+			fmt.Println("Error creating open_vscode file:", err)
 			return
 		}
 
-		// Execute the open_vscode.bat file
-		err = executeOpenVSCodeBatchFile(moduleFolder)
+		// Execute the open_vscode file
+		err = executeOpenVSCodeFile(moduleFolder)
 		if err != nil {
-			fmt.Println("Error executing open_vscode.bat file:", err)
+			fmt.Println("Error executing open_vscode file:", err)
 			return
 		}
 		fmt.Println("Visual Studio Code opened successfully.")
@@ -279,4 +280,41 @@ func executeOpenVSCodeBatchFile(folderPath string) error {
 
 	fmt.Println("Opening Visual Studio Code...")
 	return cmd.Run()
+}
+
+func createOpenVSCodeShellScript(folderPath string) error {
+	scriptFilePath := filepath.Join(folderPath, "open_vscode.sh")
+	scriptContent := "#!/bin/bash\ncode . || exit 0\n"
+	err := os.WriteFile(scriptFilePath, []byte(scriptContent), 0755) // Make the script executable
+	if err != nil {
+		return fmt.Errorf("error creating open_vscode.sh: %w", err)
+	}
+	return nil
+}
+
+func executeOpenVSCodeShellScript(folderPath string) error {
+	scriptFilePath := filepath.Join(folderPath, "open_vscode.sh")
+	cmd := exec.Command("bash", scriptFilePath)
+	cmd.Dir = folderPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("Opening Visual Studio Code...")
+	return cmd.Run()
+}
+
+func createOpenVSCodeFile(folderPath string) error {
+	if runtime.GOOS == "windows" {
+		return createOpenVSCodeBatchFile(folderPath)
+	} else {
+		return createOpenVSCodeShellScript(folderPath)
+	}
+}
+
+func executeOpenVSCodeFile(folderPath string) error {
+	if runtime.GOOS == "windows" {
+		return executeOpenVSCodeBatchFile(folderPath)
+	} else {
+		return executeOpenVSCodeShellScript(folderPath)
+	}
 }
