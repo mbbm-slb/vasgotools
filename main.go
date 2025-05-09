@@ -26,9 +26,9 @@ func main() {
 	case "generate-work":
 		generateWorkCommand(os.Args[2:])
 	case "generate-app":
-		generateAppCommand(os.Args[2:], false)
+		generateModuleCommand(os.Args[2:], false)
 	case "generate-lib":
-		generateAppCommand(os.Args[2:], true)
+		generateModuleCommand(os.Args[2:], true)
 	default:
 		fmt.Printf("Unknown command: %s\n", os.Args[1])
 		printUsage()
@@ -216,7 +216,7 @@ func addGitSubmodules(rootPath string) error {
 	return err
 }
 
-func generateAppCommand(args []string, isLibrary bool) {
+func generateModuleCommand(args []string, isLibrary bool) {
 	// Define a flag set for the "generate-app" or "generate-lib" command
 	fs := flag.NewFlagSet("generate-app", flag.ExitOnError)
 	folderPath := fs.String("path", "", "Path to create the application or library folder (defaults to current working directory)")
