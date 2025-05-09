@@ -9,6 +9,11 @@ import (
 	"runtime"
 )
 
+const (
+    openVSCodeBatchFile    = "open_vscode.bat"
+    openVSCodeShellFile    = "open_vscode.sh"
+)
+
 func main() {
 	// Ensure a subcommand is provided
 	if len(os.Args) < 2 {
@@ -266,13 +271,13 @@ func initializeGitRepository(folderPath string) error {
 }
 
 func createOpenVSCodeBatchFile(folderPath string) error {
-	batchFilePath := filepath.Join(folderPath, "open_vscode.bat")
+	batchFilePath := filepath.Join(folderPath, openVSCodeBatchFile)
 	batchFileContent := "code . | exit 0\n"
 	return os.WriteFile(batchFilePath, []byte(batchFileContent), 0644)
 }
 
 func executeOpenVSCodeBatchFile(folderPath string) error {
-	batchFilePath := filepath.Join(folderPath, "open_vscode.bat")
+	batchFilePath := filepath.Join(folderPath, openVSCodeBatchFile)
 	cmd := exec.Command("cmd", "/C", batchFilePath)
 	cmd.Dir = folderPath
 	cmd.Stdout = os.Stdout
@@ -283,7 +288,7 @@ func executeOpenVSCodeBatchFile(folderPath string) error {
 }
 
 func createOpenVSCodeShellScript(folderPath string) error {
-	scriptFilePath := filepath.Join(folderPath, "open_vscode.sh")
+	scriptFilePath := filepath.Join(folderPath, openVSCodeShellFile)
 	scriptContent := "#!/bin/bash\ncode . || exit 0\n"
 	err := os.WriteFile(scriptFilePath, []byte(scriptContent), 0755) // Make the script executable
 	if err != nil {
@@ -293,7 +298,7 @@ func createOpenVSCodeShellScript(folderPath string) error {
 }
 
 func executeOpenVSCodeShellScript(folderPath string) error {
-	scriptFilePath := filepath.Join(folderPath, "open_vscode.sh")
+	scriptFilePath := filepath.Join(folderPath, openVSCodeShellFile)
 	cmd := exec.Command("bash", scriptFilePath)
 	cmd.Dir = folderPath
 	cmd.Stdout = os.Stdout
