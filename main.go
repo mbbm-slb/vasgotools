@@ -193,12 +193,22 @@ func addGitSubmodules(rootPath string) error {
 			return err
 		}
 
+		// Skip the root directory itself
+		if path == rootPath {
+			return nil
+		}
+
 		// Check if the current folder is a Git repository
 		if info.IsDir() && filepath.Base(path) == ".git" {
 			submodulePath := filepath.Dir(path)
 			relativePath, err := filepath.Rel(rootPath, submodulePath)
 			if err != nil {
 				return err
+			}
+
+			// Skip adding the root directory as a submodule
+			if relativePath == "." {
+				return nil
 			}
 
 			// Add the Git repository as a submodule
