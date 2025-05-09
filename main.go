@@ -10,8 +10,8 @@ import (
 )
 
 const (
-    openVSCodeBatchFile    = "open_vscode.bat"
-    openVSCodeShellFile    = "open_vscode.sh"
+	openVSCodeBatchFile = "open_vscode.bat"
+	openVSCodeShellFile = "open_vscode.sh"
 )
 
 func main() {
@@ -146,13 +146,19 @@ func generateModuleCommand(args []string) {
 	// Ensure the module name is provided as the first positional argument
 	if fs.NArg() < 1 {
 		fmt.Println("Error: Module name is required.")
-		fmt.Println("Usage: vasgotools.exe generate-module <name> [--path <path>] [nogit] [nocode]")
+		fmt.Println("Usage: vasgotools.exe generate-module <name> [--path <path>] [nogit] [nocode] [nomain]")
 		os.Exit(1)
 	}
 	moduleName := fs.Arg(0)
 
 	// Check for optional flags
 	noGit, noCode := parseOptionalFlags(fs.Args()[1:])
+	noMain := false
+	for _, arg := range fs.Args()[1:] {
+		if arg == "nomain" {
+			noMain = true
+		}
+	}
 
 	// Use the current working directory if no path is provided
 	err := setDefaultFolderPath(folderPath)
@@ -183,8 +189,9 @@ func generateModuleCommand(args []string) {
 		return
 	}
 
-	// Create a main.go file with a Hello World example
-	mainGoContent := `package main
+	// Create a main.go file with a Hello World example (if not suppressed)
+	if !noMain {
+		mainGoContent := `package main
 
 import "fmt"
 
@@ -192,11 +199,15 @@ func main() {
     fmt.Println("Hello, World!")
 }
 `
-	mainGoFilePath := filepath.Join(moduleFolder, "main.go")
-	err = os.WriteFile(mainGoFilePath, []byte(mainGoContent), 0644)
-	if err != nil {
-		fmt.Println("Error creating main.go file:", err)
-		return
+		mainGoFilePath := filepath.Join(moduleFolder, "main.go")
+		err = os.WriteFile(mainGoFilePath, []byte(mainGoContent), 0644)
+		if err != nil {
+			fmt.Println("Error creating main.go file:", err)
+			return
+		}
+		fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
+	} else {
+		fmt.Println("Creation of main.go file skipped.")
 	}
 
 	// Initialize a Git repository (if not suppressed)
@@ -231,7 +242,6 @@ func main() {
 	}
 
 	fmt.Printf("Module '%s' created successfully in folder '%s'.\n", moduleFullName, moduleFolder)
-	fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
 }
 
 // parseOptionalFlags parses the optional "nogit" and "nocode" flags from the arguments.
