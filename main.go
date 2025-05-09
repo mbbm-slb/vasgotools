@@ -109,10 +109,21 @@ func generateModuleCommand(args []string) {
 	// Ensure the module name is provided as the first positional argument
 	if fs.NArg() < 1 {
 		fmt.Println("Error: Module name is required.")
-		fmt.Println("Usage: go run main.go generate-module <name> [--path <path>]")
+		fmt.Println("Usage: vasgotools.exe generate-module <name> [--path <path>] [nogit] [nocode]")
 		os.Exit(1)
 	}
 	moduleName := fs.Arg(0)
+
+	// Check for optional flags
+	noGit := false
+	noCode := false
+	for _, arg := range fs.Args()[1:] {
+		if arg == "nogit" {
+			noGit = true
+		} else if arg == "nocode" {
+			noCode = true
+		}
+	}
 
 	// Use the current working directory if no path is provided
 	if *folderPath == "" {
@@ -162,31 +173,39 @@ func main() {
 		return
 	}
 
-	// Initialize a Git repository
-	err = initializeGitRepository(moduleFolder)
-	if err != nil {
-		fmt.Println("Error initializing Git repository:", err)
-		return
+	// Initialize a Git repository (if not suppressed)
+	if !noGit {
+		err = initializeGitRepository(moduleFolder)
+		if err != nil {
+			fmt.Println("Error initializing Git repository:", err)
+			return
+		}
+		fmt.Println("Git repository initialized successfully.")
+	} else {
+		fmt.Println("Git repository initialization skipped.")
 	}
 
-	// Create the open_vscode.bat file
-	err = createOpenVSCodeBatchFile(moduleFolder)
-	if err != nil {
-		fmt.Println("Error creating open_vscode.bat file:", err)
-		return
-	}
+	// Create the open_vscode.bat file (if not suppressed)
+	if !noCode {
+		err = createOpenVSCodeBatchFile(moduleFolder)
+		if err != nil {
+			fmt.Println("Error creating open_vscode.bat file:", err)
+			return
+		}
 
-	// Execute the open_vscode.bat file
-	err = executeOpenVSCodeBatchFile(moduleFolder)
-	if err != nil {
-		fmt.Println("Error executing open_vscode.bat file:", err)
-		return
+		// Execute the open_vscode.bat file
+		err = executeOpenVSCodeBatchFile(moduleFolder)
+		if err != nil {
+			fmt.Println("Error executing open_vscode.bat file:", err)
+			return
+		}
+		fmt.Println("Visual Studio Code opened successfully.")
+	} else {
+		fmt.Println("Creation and execution of open_vscode.bat skipped.")
 	}
 
 	fmt.Printf("Module '%s' created successfully in folder '%s'.\n", moduleFullName, moduleFolder)
 	fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
-	fmt.Println("Git repository initialized successfully.")
-	fmt.Println("Visual Studio Code opened successfully.")
 }
 
 func initializeGitRepository(folderPath string) error {
