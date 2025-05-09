@@ -116,6 +116,13 @@ func generateWorkCommand(args []string) {
 			return
 		}
 		fmt.Println("Git repository initialized successfully.")
+
+		// Search for Git repositories in subfolders and add them as submodules
+		err = addGitSubmodules(*folderPath)
+		if err != nil {
+			fmt.Println("Error adding Git submodules:", err)
+			return
+		}
 	} else {
 		fmt.Println("Git repository initialization skipped.")
 	}
@@ -138,6 +145,39 @@ func generateWorkCommand(args []string) {
 	} else {
 		fmt.Println("Creation and execution of open_vscode.bat skipped.")
 	}
+}
+
+// addGitSubmodules searches for Git repositories in subfolders and adds them as submodules
+func addGitSubmodules(rootPath string) error {
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Check if the current folder is a Git repository
+		if info.IsDir() && filepath.Base(path) == ".git" {
+			submodulePath := filepath.Dir(path)
+			relativePath, err := filepath.Rel(rootPath, submodulePath)
+			if err != nil {
+				return err
+			}
+
+			// Add the Git repository as a submodule
+			cmd := exec.Command("git", "submodule", "add", submodulePath, relativePath)
+			cmd.Dir = rootPath
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			fmt.Printf("Adding submodule: %s\n", relativePath)
+			err = cmd.Run()
+			if err != nil {
+				return fmt.Errorf("error adding submodule %s: %w", relativePath, err)
+			}
+		}
+		return nil
+	})
+
+	return err
 }
 
 func generateAppCommand(args []string, isLibrary bool) {
