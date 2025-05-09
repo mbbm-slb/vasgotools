@@ -13,7 +13,7 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run main.go <command> [options]")
 		fmt.Println("Available commands:")
-		fmt.Println("  generate-work    Generate a go.work file")
+		fmt.Println("  generate-work    Generate a go workspace (i.e. a go.work file)")
 		fmt.Println("  generate-module  Create a new Go module")
 		os.Exit(1)
 	}
@@ -38,31 +38,20 @@ func generateWorkCommand(args []string) {
 	fs.Parse(args)
 
 	// Check for optional flags
-	noGit := false
-	noCode := false
-	for _, arg := range fs.Args() {
-		if arg == "nogit" {
-			noGit = true
-		} else if arg == "nocode" {
-			noCode = true
-		}
-	}
+	noGit, noCode := parseOptionalFlags(fs.Args())
 
 	// Use the current working directory if no path is provided
-	if *folderPath == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			fmt.Println("Error getting current working directory:", err)
-			return
-		}
-		*folderPath = cwd
+	err := setDefaultFolderPath(folderPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
 	}
 
 	// Slice to store relative paths of subfolders containing go.mod
 	var goModFolders []string
 
 	// Walk through the directory
-	err := filepath.Walk(*folderPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(*folderPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -157,29 +146,18 @@ func generateModuleCommand(args []string) {
 	moduleName := fs.Arg(0)
 
 	// Check for optional flags
-	noGit := false
-	noCode := false
-	for _, arg := range fs.Args()[1:] {
-		if arg == "nogit" {
-			noGit = true
-		} else if arg == "nocode" {
-			noCode = true
-		}
-	}
+	noGit, noCode := parseOptionalFlags(fs.Args()[1:])
 
 	// Use the current working directory if no path is provided
-	if *folderPath == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			fmt.Println("Error getting current working directory:", err)
-			return
-		}
-		*folderPath = cwd
+	err := setDefaultFolderPath(folderPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
 	}
 
 	// Create the module folder
 	moduleFolder := filepath.Join(*folderPath, moduleName)
-	err := os.MkdirAll(moduleFolder, 0755)
+	err = os.MkdirAll(moduleFolder, 0755)
 	if err != nil {
 		fmt.Println("Error creating module folder:", err)
 		return
@@ -248,6 +226,32 @@ func main() {
 
 	fmt.Printf("Module '%s' created successfully in folder '%s'.\n", moduleFullName, moduleFolder)
 	fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
+}
+
+// parseOptionalFlags parses the optional "nogit" and "nocode" flags from the arguments.
+func parseOptionalFlags(args []string) (bool, bool) {
+	noGit := false
+	noCode := false
+	for _, arg := range args {
+		if arg == "nogit" {
+			noGit = true
+		} else if arg == "nocode" {
+			noCode = true
+		}
+	}
+	return noGit, noCode
+}
+
+// setDefaultFolderPath sets the folder path to the current working directory if it is empty.
+func setDefaultFolderPath(folderPath *string) error {
+	if *folderPath == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("getting current working directory: %w", err)
+		}
+		*folderPath = cwd
+	}
+	return nil
 }
 
 func initializeGitRepository(folderPath string) error {
