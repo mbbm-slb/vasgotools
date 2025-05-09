@@ -37,6 +37,17 @@ func generateWorkCommand(args []string) {
 	folderPath := fs.String("path", "", "Path to the folder (defaults to current working directory)")
 	fs.Parse(args)
 
+	// Check for optional flags
+	noGit := false
+	noCode := false
+	for _, arg := range fs.Args() {
+		if arg == "nogit" {
+			noGit = true
+		} else if arg == "nocode" {
+			noCode = true
+		}
+	}
+
 	// Use the current working directory if no path is provided
 	if *folderPath == "" {
 		cwd, err := os.Getwd()
@@ -97,6 +108,37 @@ func generateWorkCommand(args []string) {
 		fmt.Println("go.work file created successfully.")
 	} else {
 		fmt.Println("No subfolders with go.mod found. No go.work file created.")
+	}
+
+	// Initialize a Git repository (if not suppressed)
+	if !noGit {
+		err = initializeGitRepository(*folderPath)
+		if err != nil {
+			fmt.Println("Error initializing Git repository:", err)
+			return
+		}
+		fmt.Println("Git repository initialized successfully.")
+	} else {
+		fmt.Println("Git repository initialization skipped.")
+	}
+
+	// Create the open_vscode.bat file (if not suppressed)
+	if !noCode {
+		err = createOpenVSCodeBatchFile(*folderPath)
+		if err != nil {
+			fmt.Println("Error creating open_vscode.bat file:", err)
+			return
+		}
+
+		// Execute the open_vscode.bat file
+		err = executeOpenVSCodeBatchFile(*folderPath)
+		if err != nil {
+			fmt.Println("Error executing open_vscode.bat file:", err)
+			return
+		}
+		fmt.Println("Visual Studio Code opened successfully.")
+	} else {
+		fmt.Println("Creation and execution of open_vscode.bat skipped.")
 	}
 }
 
