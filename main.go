@@ -17,11 +17,7 @@ const (
 func main() {
 	// Ensure a subcommand is provided
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <command> [options]")
-		fmt.Println("Available commands:")
-		fmt.Println("  generate-work    Generate a go workspace (i.e. a go.work file)")
-		fmt.Println("  generate-app     Create a new Go application")
-		fmt.Println("  generate-lib     Create a new Go library")
+		printUsage()
 		os.Exit(1)
 	}
 
@@ -35,9 +31,38 @@ func main() {
 		generateAppCommand(os.Args[2:], true)
 	default:
 		fmt.Printf("Unknown command: %s\n", os.Args[1])
-		fmt.Println("Use 'go run main.go' for usage.")
+		printUsage()
 		os.Exit(1)
 	}
+}
+
+func printUsage() {
+	fmt.Println("VasGoTools - A utility tool for managing Go projects")
+	fmt.Println()
+	fmt.Println("This application provides commands to simplify the creation and management of Go projects,")
+	fmt.Println("including generating Go workspaces, applications, and libraries.")
+	fmt.Println()
+	fmt.Println("Usage:")
+	fmt.Println("  vasgotools.exe <command> [options]")
+	fmt.Println()
+	fmt.Println("Available commands:")
+	fmt.Println("  generate-work    Generate a Go workspace (i.e., a go.work file)")
+	fmt.Println("  generate-app     Create a new Go application")
+	fmt.Println("  generate-lib     Create a new Go library")
+	fmt.Println()
+	fmt.Println("Options:")
+	fmt.Println("  --path <path>    Specify the folder path (defaults to the current working directory)")
+	fmt.Println("  nogit            Skip Git repository initialization")
+	fmt.Println("  nocode           Skip creation and execution of the open_vscode file")
+	fmt.Println("  nomain           Skip creation of the main.go file (only for generate-app)")
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println("  vasgotools.exe generate-work --path \"C:\\projects\\myworkspace\"")
+	fmt.Println("  vasgotools.exe generate-app myapp --path \"C:\\projects\"")
+	fmt.Println("  vasgotools.exe generate-lib mylib nogit nocode")
+	fmt.Println("  vasgotools.exe generate-app myapp nomain nogit")
+	fmt.Println()
+	fmt.Println("For more information, use 'go run main.go <command>' to see command-specific options.")
 }
 
 func generateWorkCommand(args []string) {
