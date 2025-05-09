@@ -20,7 +20,7 @@ func main() {
 		fmt.Println("Usage: go run main.go <command> [options]")
 		fmt.Println("Available commands:")
 		fmt.Println("  generate-work    Generate a go workspace (i.e. a go.work file)")
-		fmt.Println("  generate-module  Create a new Go module")
+		fmt.Println("  generate-app     Create a new Go application")
 		os.Exit(1)
 	}
 
@@ -28,8 +28,8 @@ func main() {
 	switch os.Args[1] {
 	case "generate-work":
 		generateWorkCommand(os.Args[2:])
-	case "generate-module":
-		generateModuleCommand(os.Args[2:])
+	case "generate-app":
+		generateAppCommand(os.Args[2:])
 	default:
 		fmt.Printf("Unknown command: %s\n", os.Args[1])
 		fmt.Println("Use 'go run main.go' for usage.")
@@ -137,19 +137,19 @@ func generateWorkCommand(args []string) {
 	}
 }
 
-func generateModuleCommand(args []string) {
-	// Define a flag set for the "generate-module" command
-	fs := flag.NewFlagSet("generate-module", flag.ExitOnError)
-	folderPath := fs.String("path", "", "Path to create the module folder (defaults to current working directory)")
+func generateAppCommand(args []string) {
+	// Define a flag set for the "generate-app" command
+	fs := flag.NewFlagSet("generate-app", flag.ExitOnError)
+	folderPath := fs.String("path", "", "Path to create the application folder (defaults to current working directory)")
 	fs.Parse(args)
 
-	// Ensure the module name is provided as the first positional argument
+	// Ensure the application name is provided as the first positional argument
 	if fs.NArg() < 1 {
-		fmt.Println("Error: Module name is required.")
-		fmt.Println("Usage: vasgotools.exe generate-module <name> [--path <path>] [nogit] [nocode] [nomain]")
+		fmt.Println("Error: Application name is required.")
+		fmt.Println("Usage: vasgotools.exe generate-app <name> [--path <path>] [nogit] [nocode] [nomain]")
 		os.Exit(1)
 	}
-	moduleName := fs.Arg(0)
+	appName := fs.Arg(0)
 
 	// Check for optional flags
 	noGit, noCode := parseOptionalFlags(fs.Args()[1:])
@@ -167,18 +167,18 @@ func generateModuleCommand(args []string) {
 		return
 	}
 
-	// Create the module folder
-	moduleFolder := filepath.Join(*folderPath, moduleName)
-	err = os.MkdirAll(moduleFolder, 0755)
+	// Create the application folder
+	appFolder := filepath.Join(*folderPath, appName)
+	err = os.MkdirAll(appFolder, 0755)
 	if err != nil {
-		fmt.Println("Error creating module folder:", err)
+		fmt.Println("Error creating application folder:", err)
 		return
 	}
 
 	// Run the "go mod init" command
-	moduleFullName := "github.com/muellerbbm-vas/" + moduleName
-	cmd := exec.Command("go", "mod", "init", moduleFullName)
-	cmd.Dir = moduleFolder
+	appFullName := "github.com/muellerbbm-vas/" + appName
+	cmd := exec.Command("go", "mod", "init", appFullName)
+	cmd.Dir = appFolder
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -199,7 +199,7 @@ func main() {
     fmt.Println("Hello, World!")
 }
 `
-		mainGoFilePath := filepath.Join(moduleFolder, "main.go")
+		mainGoFilePath := filepath.Join(appFolder, "main.go")
 		err = os.WriteFile(mainGoFilePath, []byte(mainGoContent), 0644)
 		if err != nil {
 			fmt.Println("Error creating main.go file:", err)
@@ -212,7 +212,7 @@ func main() {
 
 	// Initialize a Git repository (if not suppressed)
 	if !noGit {
-		err = initializeGitRepository(moduleFolder)
+		err = initializeGitRepository(appFolder)
 		if err != nil {
 			fmt.Println("Error initializing Git repository:", err)
 			return
@@ -224,14 +224,14 @@ func main() {
 
 	// Create the open_vscode.bat file (if not suppressed)
 	if !noCode {
-		err = createOpenVSCodeFile(moduleFolder)
+		err = createOpenVSCodeFile(appFolder)
 		if err != nil {
 			fmt.Println("Error creating open_vscode file:", err)
 			return
 		}
 
 		// Execute the open_vscode file
-		err = executeOpenVSCodeFile(moduleFolder)
+		err = executeOpenVSCodeFile(appFolder)
 		if err != nil {
 			fmt.Println("Error executing open_vscode file:", err)
 			return
@@ -241,7 +241,7 @@ func main() {
 		fmt.Println("Creation and execution of open_vscode.bat skipped.")
 	}
 
-	fmt.Printf("Module '%s' created successfully in folder '%s'.\n", moduleFullName, moduleFolder)
+	fmt.Printf("Application '%s' created successfully in folder '%s'.\n", appFullName, appFolder)
 }
 
 // parseOptionalFlags parses the optional "nogit" and "nocode" flags from the arguments.
