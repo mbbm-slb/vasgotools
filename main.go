@@ -163,35 +163,21 @@ func main() {
 	}
 
 	// Initialize a Git repository
-	cmd = exec.Command("git", "init")
-	cmd.Dir = moduleFolder
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	fmt.Println("Initializing Git repository...")
-	err = cmd.Run()
+	err = initializeGitRepository(moduleFolder)
 	if err != nil {
 		fmt.Println("Error initializing Git repository:", err)
 		return
 	}
 
 	// Create the open_vscode.bat file
-	batchFilePath := filepath.Join(moduleFolder, "open_vscode.bat")
-	batchFileContent := "code . | exit 0\n"
-	err = os.WriteFile(batchFilePath, []byte(batchFileContent), 0644)
+	err = createOpenVSCodeBatchFile(moduleFolder)
 	if err != nil {
 		fmt.Println("Error creating open_vscode.bat file:", err)
 		return
 	}
 
 	// Execute the open_vscode.bat file
-	cmd = exec.Command("cmd", "/C", batchFilePath)
-	cmd.Dir = moduleFolder
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	fmt.Println("Opening Visual Studio Code...")
-	err = cmd.Run()
+	err = executeOpenVSCodeBatchFile(moduleFolder)
 	if err != nil {
 		fmt.Println("Error executing open_vscode.bat file:", err)
 		return
@@ -201,4 +187,31 @@ func main() {
 	fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
 	fmt.Println("Git repository initialized successfully.")
 	fmt.Println("Visual Studio Code opened successfully.")
+}
+
+func initializeGitRepository(folderPath string) error {
+	cmd := exec.Command("git", "init")
+	cmd.Dir = folderPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("Initializing Git repository...")
+	return cmd.Run()
+}
+
+func createOpenVSCodeBatchFile(folderPath string) error {
+	batchFilePath := filepath.Join(folderPath, "open_vscode.bat")
+	batchFileContent := "code . | exit 0\n"
+	return os.WriteFile(batchFilePath, []byte(batchFileContent), 0644)
+}
+
+func executeOpenVSCodeBatchFile(folderPath string) error {
+	batchFilePath := filepath.Join(folderPath, "open_vscode.bat")
+	cmd := exec.Command("cmd", "/C", batchFilePath)
+	cmd.Dir = folderPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("Opening Visual Studio Code...")
+	return cmd.Run()
 }
