@@ -1,0 +1,15 @@
+#!/bin/bash
+
+X# Get the version information from the latest Git tag
+GIT_VERSION_INFO=$(git describe --tags)
+
+# Ensure the version string starts with 'v'
+if [[ "$GIT_VERSION_INFO" != v* ]]; then
+  GIT_VERSION_INFO="v$GIT_VERSION_INFO"
+fi
+
+# Print the version information
+echo "Version: $GIT_VERSION_INFO"
+
+# Build the Go application with the version information embedded
+go build -ldflags "-X main.gitVersionInfo=$GIT_VERSION_INFO"

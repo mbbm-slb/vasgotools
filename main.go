@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"os"
@@ -13,6 +14,17 @@ const (
 	openVSCodeBatchFile = "open_vscode.bat"
 	openVSCodeShellFile = "open_vscode.sh"
 )
+
+// Embed the template files
+
+//go:embed build.bat.template
+var buildBatTemplate string
+
+//go:embed build.sh.template
+var buildShTemplate string
+
+//go:embed main.go.template
+var mainGoTemplate string
 
 func main() {
 	// Ensure a subcommand is provided
@@ -277,25 +289,26 @@ func generateModuleCommand(args []string, isLibrary bool) {
 		return
 	}
 
-	// Create a main.go file with a Hello World example (if not suppressed)
+	// Write main.go from the embedded template (if not suppressed)
 	if !noMain {
-		mainGoContent := `package main
 
-import "fmt"
-
-func main() {
-    fmt.Println("Hello, World!")
-}
-`
-		mainGoFilePath := filepath.Join(folder, "main.go")
-		err = os.WriteFile(mainGoFilePath, []byte(mainGoContent), 0644)
+		// Write build.bat from the embedded template
+		err = createBuildScript(folder)
 		if err != nil {
-			fmt.Println("Error creating main.go file:", err)
 			return
 		}
-		fmt.Printf("A main.go file with a Hello World example has been created in '%s'.\n", mainGoFilePath)
+		fmt.Println("build script created successfully.")
+
+		// Create the main.go file from the embedded template
+		mainGoPath := filepath.Join(folder, "main.go")
+		err = os.WriteFile(mainGoPath, []byte(mainGoTemplate), 0644)
+		if err != nil {
+			fmt.Println("Error writing main.go:", err)
+			return
+		}
+		fmt.Println("main.go created successfully.")
 	} else {
-		fmt.Println("Creation of main.go file skipped.")
+		fmt.Println("Creation of main.go skipped.")
 	}
 
 	// Initialize a Git repository (if not suppressed)
@@ -419,5 +432,31 @@ func executeOpenVSCodeFile(folderPath string) error {
 		return executeOpenVSCodeBatchFile(folderPath)
 	} else {
 		return executeOpenVSCodeShellScript(folderPath)
+	}
+}
+
+func createBuildBatchFile(folderPath string) error {
+	batchFilePath := filepath.Join(folderPath, "build.bat")
+	err := os.WriteFile(batchFilePath, []byte(buildBatTemplate), 0644)
+	if err != nil {
+		return fmt.Errorf("error creating build.bat: %w", err)
+	}
+	return nil
+}
+
+func createBuildShellScript(folderPath string) error {
+	scriptFilePath := filepath.Join(folderPath, "build.sh")
+	err := os.WriteFile(scriptFilePath, []byte(buildShTemplate), 0755) // Make the script executable
+	if err != nil {
+		return fmt.Errorf("error creating build.sh: %w", err)
+	}
+	return nil
+}
+
+func createBuildScript(folderPath string) error {
+	if runtime.GOOS == "windows" {
+		return createBuildBatchFile(folderPath)
+	} else {
+		return createBuildShellScript(folderPath)
 	}
 }

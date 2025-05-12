@@ -1,0 +1,55 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+var gitVersionInfo string
+
+func printVersion() {
+	fmt.Println(gitVersionInfo)
+}
+
+func main() {
+
+	// =================================================================================================
+	// Get the name of the application
+	// =================================================================================================
+	appPath := os.Args[0]
+	appName := filepath.Base(appPath)
+
+	// =================================================================================================
+	// customize flag usage output (see: https://stackoverflow.com/questions/23725924/can-gos-flag-package-print-usage)
+	// =================================================================================================
+	flag.Usage = func() {
+		w := flag.CommandLine.Output() // may be os.Stderr - but not necessarily
+
+		fmt.Fprintf(w, "\n %s (%s): An application prototype.\n\n", appName, gitVersionInfo)
+
+		flag.PrintDefaults()
+	}
+
+	// =================================================================================================
+	// parse commandline options =======================================================================
+	// =================================================================================================
+	// TODO: other commandline options here
+	doPrintVersionInfo := flag.Bool("v", false, "Print the current version and exit")
+
+	flag.Parse()
+
+	// =================================================================================================
+	// print version info and exit if requested
+	// =================================================================================================
+	if *doPrintVersionInfo {
+		printVersion()
+		return
+	}
+
+	// =================================================================================================
+	// TODO: relevant code goes here
+	// =================================================================================================
+    fmt.Println("Hello, World!")
+}
