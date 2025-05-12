@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 and this project adheres to Semantic Versioning (http://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-05-12
+### Fixed
+- use command "go mod edit -go=1.24" to change go version in go.mod from three part format (major.minor.build) to two part format (major.minor). 
+  The three part format give an error "go.mod:3: invalid go version '1.24.2': must match format 1.23" on some machines (especially MacOs ?)
+
 ## [0.2.0] - 2025-05-12
 ### Added
 - on app creation add the infrastructure to show how version information from git can be shown in the commandline (option -v)
