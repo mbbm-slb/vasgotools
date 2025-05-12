@@ -1,0 +1,20 @@
+﻿vasgotools - Changelog
+======================
+
+All notable changes to this project will be documented in this file.
+
+The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
+and this project adheres to Semantic Versioning (http://semver.org/spec/v2.0.0.html).
+
+## [0.2.0] - 2025-05-12
+### Added
+- on app creation add the infrastructure to show how version information from git can be shown in the commandline (option -v)
+- add usage information to created main.go
+
+## [0.1.1] - 2025-05-09
+### Fixed
+- do not add the workspace git repository as its own submodule
+
+## [0.1.0] - 2025-05-09
+### Added
+- initial release for generating apps, libs and workspaces with optionally initializing git repositories 
