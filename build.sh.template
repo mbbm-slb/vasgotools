@@ -1,6 +1,6 @@
 #!/bin/bash
 
-X# Get the version information from the latest Git tag
+# Get the version information from the latest Git tag
 GIT_VERSION_INFO=$(git describe --tags)
 
 # Ensure the version string starts with 'v'
