@@ -160,25 +160,6 @@ func generateWorkCommand(args []string) {
 		fmt.Println("No subfolders with go.mod found. No go.work file created.")
 	}
 
-	// Initialize a Git repository (if not suppressed)
-	if !noGit {
-		err = initializeGitRepository(*folderPath)
-		if err != nil {
-			fmt.Println("Error initializing Git repository:", err)
-			return
-		}
-		fmt.Println("Git repository initialized successfully.")
-
-		// Search for Git repositories in subfolders and add them as submodules
-		err = addGitSubmodules(*folderPath)
-		if err != nil {
-			fmt.Println("Error adding Git submodules:", err)
-			return
-		}
-	} else {
-		fmt.Println("Git repository initialization skipped.")
-	}
-
 	// Create the open_vscode.bat file (if not suppressed)
 	if !noCode {
 		err = createOpenVSCodeFile(*folderPath)
@@ -196,6 +177,46 @@ func generateWorkCommand(args []string) {
 		fmt.Println("Visual Studio Code opened successfully.")
 	} else {
 		fmt.Println("Creation and execution of open_vscode.bat skipped.")
+	}
+
+	// Initialize a Git repository (if not suppressed)
+	if !noGit {
+		err = initializeGitRepository(*folderPath)
+		if err != nil {
+			fmt.Println("Error initializing Git repository:", err)
+			return
+		}
+		fmt.Println("Git repository initialized successfully.")
+
+		// Search for Git repositories in subfolders and add them as submodules
+		err = addGitSubmodules(*folderPath)
+		if err != nil {
+			fmt.Println("Error adding Git submodules:", err)
+			return
+		}
+
+		// Add all files and commit with message "init"
+		cmdAdd := exec.Command("git", "add", ".")
+		cmdAdd.Dir = *folderPath
+		cmdAdd.Stdout = os.Stdout
+		cmdAdd.Stderr = os.Stderr
+		if err := cmdAdd.Run(); err != nil {
+			fmt.Println("Error adding files to git:", err)
+			return
+		}
+
+		// create initial commit mit message "init"
+		cmdCommit := exec.Command("git", "commit", "-m", "init")
+		cmdCommit.Dir = *folderPath
+		cmdCommit.Stdout = os.Stdout
+		cmdCommit.Stderr = os.Stderr
+		if err := cmdCommit.Run(); err != nil {
+			fmt.Println("Error committing files to git:", err)
+			return
+		}
+		fmt.Println("All files and submodules added and initial commit created.")
+	} else {
+		fmt.Println("Git repository initialization skipped.")
 	}
 }
 
@@ -350,6 +371,7 @@ func generateModuleCommand(args []string, isLibrary bool) {
 			return
 		}
 
+		// create initial commit mit message "init"
 		cmdCommit := exec.Command("git", "commit", "-m", "init")
 		cmdCommit.Dir = folder
 		cmdCommit.Stdout = os.Stdout
