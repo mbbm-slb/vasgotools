@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -420,11 +421,9 @@ func executeOpenVSCodeShellScript(folderPath string) error {
 }
 
 func createOpenVSCodeFile(folderPath string) error {
-	if runtime.GOOS == "windows" {
-		return createOpenVSCodeBatchFile(folderPath)
-	} else {
-		return createOpenVSCodeShellScript(folderPath)
-	}
+	err1 := createOpenVSCodeBatchFile(folderPath)
+	err2 := createOpenVSCodeShellScript(folderPath)
+	return errors.Join(err1, err2)
 }
 
 func executeOpenVSCodeFile(folderPath string) error {
@@ -454,9 +453,7 @@ func createBuildShellScript(folderPath string) error {
 }
 
 func createBuildScript(folderPath string) error {
-	if runtime.GOOS == "windows" {
-		return createBuildBatchFile(folderPath)
-	} else {
-		return createBuildShellScript(folderPath)
-	}
+	err1 := createBuildBatchFile(folderPath)
+	err2 := createBuildShellScript(folderPath)
+	return errors.Join(err1, err2)
 }
