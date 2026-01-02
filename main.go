@@ -136,6 +136,28 @@ func generateWorkCommand(args []string) {
 		return
 	}
 
+	// Check, if the go.work file already exists. If so, delete it to allow recreation (we do currently not support updating)
+	goWorkFilePath := filepath.Join(*folderPath, "go.work")
+	if _, err := os.Stat(goWorkFilePath); err == nil {
+		fmt.Printf("go.work file already exists at %s => deleting\n", goWorkFilePath)
+		err := os.Remove(goWorkFilePath)
+		if err != nil {
+			fmt.Println("Error deleting go.work file:", err)
+			return
+		}
+	}
+	
+	// Check, if the go.work.sum file already exists. If so, delete it to allow recreation (we do currently not support updating)
+	goWorkSumFilePath := filepath.Join(*folderPath, "go.work.sum")
+	if _, err := os.Stat(goWorkSumFilePath); err == nil {
+		fmt.Printf("go.work.sum file already exists at %s => deleting\n", goWorkSumFilePath)
+		err := os.Remove(goWorkSumFilePath)
+		if err != nil {
+			fmt.Println("Error deleting go.work.sum file:", err)
+			return
+		}
+	}
+
 	// Print the collected relative paths
 	fmt.Println("Subfolders containing go.mod:")
 	for _, folder := range goModFolders {
