@@ -14,7 +14,7 @@ import (
 const (
 	openVSCodeBatchFile = "open_vscode.bat"
 	openVSCodeShellFile = "open_vscode.sh"
-	modulePrefixMbbVas = "github.com/muellerbbm-vas/"
+	modulePrefixMbbVas  = "github.com/muellerbbm-vas/"
 	modulePrefixMbbmSlb = "github.com/mbbm-slb/"
 )
 
