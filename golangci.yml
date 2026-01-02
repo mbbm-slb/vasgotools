@@ -1,0 +1,166 @@
+# golangci-lint configuration with security checks
+# Based on golangci.reference.yml
+
+version: "2"
+
+run:
+  timeout: 5m
+  tests: false  # Exclude all test files from linting
+  relative-path-mode: gomod
+
+linters:
+  enable:
+    # Security
+    - gosec          # Security analyzer for Go code
+    
+    # Core quality checks
+    #- errcheck       # Check for unchecked errors
+    - staticcheck    # Advanced static analysis
+    - govet          # Go vet examines Go source code
+    - ineffassign    # Detect ineffectual assignments
+    - unused         # Check for unused constants, variables, functions
+    
+    # Style & Formatting
+    - misspell       # Find commonly misspelled English words
+    
+    # Best Practices
+    - unconvert      # Remove unnecessary type conversions
+    - gocritic       # Comprehensive Go source code linter
+    - revive         # Fast and configurable linter for Go
+    - bodyclose      # Check whether HTTP response body is closed successfully
+    - contextcheck   # Check whether the function uses a non-inherited context
+    
+    # Additional useful linters
+    - errname        # Check that sentinel errors are prefixed with Err
+    - errorlint      # Check for non-wrapped errors
+    - nilerr         # Check that there is no simultaneous return of nil error and an invalid value
+  
+  #disable:
+  #  - errcheck      # Disable errcheck linter globally
+
+  exclusions:
+    presets:
+      - std-error-handling #default exclude for errcheck
+
+linters-settings:
+  gosec:
+    # Include all important security rules
+    includes:
+      - G101 # Look for hard coded credentials
+      - G102 # Bind to all interfaces
+      - G103 # Audit the use of unsafe block
+      - G104 # Audit errors not checked
+      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
+      - G107 # Url provided to HTTP request as taint input
+      - G108 # Profiling endpoint automatically exposed on /debug/pprof
+      - G109 # Potential Integer overflow made by strconv.Atoi result conversion
+      - G110 # Potential DoS vulnerability via decompression bomb
+      - G111 # Potential directory traversal
+      - G112 # Potential slowloris attack
+      - G114 # Use of net/http serve function that has no support for setting timeouts
+      - G115 # Potential integer overflow when converting between integer types
+      - G201 # SQL query construction using format string
+      - G202 # SQL query construction using string concatenation
+      - G203 # Use of unescaped data in HTML templates
+      - G204 # Audit use of command execution
+      - G301 # Poor file permissions used when creating a directory
+      - G302 # Poor file permissions used with chmod
+      - G303 # Creating tempfile using a predictable path
+      - G304 # File path provided as taint input
+      - G305 # File traversal when extracting zip/tar archive
+      - G306 # Poor file permissions used when writing to a new file
+      - G307 # Poor file permissions used when creating a file with os.Create
+      - G401 # Detect the usage of MD5 or SHA1
+      - G402 # Look for bad TLS connection settings
+      - G403 # Ensure minimum RSA key length of 2048 bits
+      - G404 # Insecure random number source (rand)
+      - G405 # Detect the usage of DES or RC4
+      - G406 # Detect the usage of MD4 or RIPEMD160
+      - G501 # Import blocklist: crypto/md5
+      - G502 # Import blocklist: crypto/des
+      - G503 # Import blocklist: crypto/rc4
+      - G504 # Import blocklist: net/http/cgi
+      - G505 # Import blocklist: crypto/sha1
+      - G506 # Import blocklist: golang.org/x/crypto/md4
+      - G507 # Import blocklist: golang.org/x/crypto/ripemd160
+      - G601 # Implicit memory aliasing of items from a range statement
+      - G602 # Slice access out of bounds
+
+  errcheck:
+    check-type-assertions: true
+    check-blank: false  # Allow blank identifier for unused return values
+    exclude-functions:
+      - fmt.Print
+      - fmt.Printf
+      - fmt.Println
+      - fmt.Fprint
+      - fmt.Fprintf
+      - fmt.Fprintln
+
+    ignore: 
+      - fmt:.*
+
+  staticcheck:
+    checks: ["all"]
+
+  govet:
+    check-shadowing: true
+    enable-all: true
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - performance
+      - style
+
+  revive:
+    rules:
+      - name: exported
+        disabled: false
+      - name: package-comments
+        disabled: false
+      - name: var-naming
+        disabled: false
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    # Exclude all linters from test files
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+        - staticcheck
+        - govet
+        - ineffassign
+        - unused
+        - misspell
+        - unconvert
+        - gocritic
+        - revive
+        - bodyclose
+        - contextcheck
+        - errname
+        - errorlint
+        - nilerr
+    
+    # Common false positives
+    - text: "shadows declaration"
+      linters:
+        - govet
+      source: "err := "
+    
+    # Exclude fmt function error checks globally
+    - text: "Error return value of .*fmt\\.(Print|Printf|Println|Fprint|Fprintf|Fprintln|Sprint|Sprintf|Sprintln).* is not checked"
+      linters:
+        - errcheck
+    
+    # Exclude common Close() method error checks
+    - text: "Error return value of .*\\.Close.* is not checked"
+      linters:
+        - errcheck
+      source: "\\.(Close|close)\\(\\)"
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
