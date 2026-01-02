@@ -1,10 +1,8 @@
 # Keep the ideas and plans for improvement here
 
 2025-08-06:
-- Update Workspace: if you added, removed or renamed modules within the workspace
 - Add buildfiles to workspace: assume build.bat in every module
-- Add jenkinsfiles to workspace (applications? But applications are not neccesarily buildable)
+- Add jenkinsfiles to workspace (applications? But applications are not necessarily buildable)
 - Create/Update Vendor folder for workspace/modules?
-- Create prebuild.bat for modules (gofmt, vat, vulncheck, documentation, ...)
 - Create postbuild.bat for workspace (Installer for services, docker for services, ...)
 - Docker?
