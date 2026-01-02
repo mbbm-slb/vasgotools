@@ -38,11 +38,11 @@ func main() {
 
 	// Determine the subcommand
 	switch os.Args[1] {
-	case "generate-work":
+	case "work":
 		generateWorkCommand(os.Args[2:])
-	case "generate-app":
+	case "app":
 		generateModuleCommand(os.Args[2:], false)
-	case "generate-lib":
+	case "lib":
 		generateModuleCommand(os.Args[2:], true)
 	default:
 		fmt.Printf("Unknown command: %s\n", os.Args[1])
@@ -61,9 +61,9 @@ func printUsage() {
 	fmt.Println("  vasgotools.exe <command> [options]")
 	fmt.Println()
 	fmt.Println("Available commands:")
-	fmt.Println("  generate-work    Generate a Go workspace (i.e., a go.work file)")
-	fmt.Println("  generate-app     Create a new Go application")
-	fmt.Println("  generate-lib     Create a new Go library")
+	fmt.Println("  work    Generate a Go workspace (i.e., a go.work file)")
+	fmt.Println("  app     Create a new Go application")
+	fmt.Println("  lib     Create a new Go library")
 	fmt.Println()
 	fmt.Println("Options:")
 	fmt.Println("  --path <path>        Specify the folder path (defaults to the current working directory)")
@@ -71,7 +71,7 @@ func printUsage() {
 	fmt.Println("                      Specify the module prefix (default: github.com/muellerbbm-vas/)")
 	fmt.Println("  nogit                Skip Git repository initialization")
 	fmt.Println("  nocode               Skip creation and execution of the open_vscode file")
-	fmt.Println("  nomain               Skip creation of the main.go file (only for generate-app)")
+	fmt.Println("  nomain               Skip creation of the main.go file (only for app)")
 	fmt.Println()
 	fmt.Println("Endorsed Folder Structure for Workspaces:")
 	fmt.Println("  The recommended folder structure for a Go workspace is as follows:")
@@ -85,18 +85,18 @@ func printUsage() {
 	fmt.Println("      └── lib2/       # Library 2 folder")
 	fmt.Println()
 	fmt.Println("Examples:")
-	fmt.Println("  vasgotools.exe generate-work --path \"C:\\projects\\myworkspace\"")
-	fmt.Println("  vasgotools.exe generate-app myapp --path \"C:\\projects\"")
-	fmt.Println("  vasgotools.exe generate-lib mylib nogit nocode")
-	fmt.Println("  vasgotools.exe generate-app myapp nomain nogit")
-	fmt.Println("  vasgotools.exe generate-app myapp --module-prefix \"github.com/custom-prefix/\"")
+	fmt.Println("  vasgotools.exe work --path \"C:\\projects\\myworkspace\"")
+	fmt.Println("  vasgotools.exe app myapp --path \"C:\\projects\"")
+	fmt.Println("  vasgotools.exe lib mylib nogit nocode")
+	fmt.Println("  vasgotools.exe app myapp nomain nogit")
+	fmt.Println("  vasgotools.exe app myapp --module-prefix \"github.com/custom-prefix/\"")
 	fmt.Println()
 	fmt.Println("For more information, use 'go run main.go <command>' to see command-specific options.")
 }
 
 func generateWorkCommand(args []string) {
-	// Define a flag set for the "generate-work" command
-	fs := flag.NewFlagSet("generate-work", flag.ExitOnError)
+	// Define a flag set for the "work" command
+	fs := flag.NewFlagSet("work", flag.ExitOnError)
 	folderPath := fs.String("path", "", "Path to the folder (defaults to current working directory)")
 	fs.Parse(args)
 
@@ -146,7 +146,7 @@ func generateWorkCommand(args []string) {
 			return
 		}
 	}
-	
+
 	// Check, if the go.work.sum file already exists. If so, delete it to allow recreation (we do currently not support updating)
 	goWorkSumFilePath := filepath.Join(*folderPath, "go.work.sum")
 	if _, err := os.Stat(goWorkSumFilePath); err == nil {
@@ -288,8 +288,8 @@ func addGitSubmodules(rootPath string) error {
 }
 
 func generateModuleCommand(args []string, isLibrary bool) {
-	// Define a flag set for the "generate-app" or "generate-lib" command
-	fs := flag.NewFlagSet("generate-app", flag.ExitOnError)
+	// Define a flag set for the "app" or "lib" command
+	fs := flag.NewFlagSet("app", flag.ExitOnError)
 	folderPath := fs.String("path", "", "Path to create the application or library folder (defaults to current working directory)")
 	modulePrefixCmd := fs.String("module-prefix", "none", "Specify the module prefix (default: none, shortcuts: 'vas' for muellerbbm-vas, 'slb' for mbbm-slb)")
 	fs.Parse(args)
@@ -310,7 +310,7 @@ func generateModuleCommand(args []string, isLibrary bool) {
 	// Ensure the application or library name is provided as the first positional argument
 	if fs.NArg() < 1 {
 		fmt.Println("Error: Name is required.")
-		fmt.Println("Usage: vasgotools.exe generate-app <name> [--path <path>] [--module-prefix <prefix>] [nogit] [nocode] [nomain]")
+		fmt.Println("Usage: vasgotools.exe app <name> [--path <path>] [--module-prefix <prefix>] [nogit] [nocode] [nomain]")
 		os.Exit(1)
 	}
 	name := fs.Arg(0)
