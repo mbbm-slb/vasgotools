@@ -32,6 +32,18 @@ var buildShTemplate string
 //go:embed main.go.template
 var mainGoTemplate string
 
+//go:embed analyze.bat
+var analyzeBatTemplate string
+
+//go:embed analyze.sh
+var analyzeShTemplate string
+
+//go:embed golangci_win.yml
+var golangciWinYmlTemplate string
+
+//go:embed golangci.yml
+var golangciYmlTemplate string
+
 func main() {
 	// Ensure a subcommand is provided
 	if len(os.Args) < 2 {
@@ -360,6 +372,14 @@ func generateModuleCommand(args []string, isLibrary bool) {
 		return
 	}
 
+	// Create analyze scripts and golangci-lint config files
+	err = createAnalyzeScripts(folder)
+	if err != nil {
+		fmt.Println("Error creating analyze scripts:", err)
+		return
+	}
+	fmt.Println("Analyze scripts and configuration files created successfully.")
+
 	// Write main.go from the embedded template (if not suppressed)
 	if !noMain {
 
@@ -551,4 +571,49 @@ func createBuildScript(folderPath string) error {
 	err1 := createBuildBatchFile(folderPath)
 	err2 := createBuildShellScript(folderPath)
 	return errors.Join(err1, err2)
+}
+
+func createAnalyzeBatchFile(folderPath string) error {
+	batchFilePath := filepath.Join(folderPath, "analyze.bat")
+	err := os.WriteFile(batchFilePath, []byte(analyzeBatTemplate), 0o600)
+	if err != nil {
+		return fmt.Errorf("error creating analyze.bat: %w", err)
+	}
+	return nil
+}
+
+func createAnalyzeShellScript(folderPath string) error {
+	scriptFilePath := filepath.Join(folderPath, "analyze.sh")
+	//nolint:gosec // G306: Script needs to be executable
+	err := os.WriteFile(scriptFilePath, []byte(analyzeShTemplate), 0o700) // Make the script executable
+	if err != nil {
+		return fmt.Errorf("error creating analyze.sh: %w", err)
+	}
+	return nil
+}
+
+func createGolangciWinYml(folderPath string) error {
+	ymlFilePath := filepath.Join(folderPath, "golangci_win.yml")
+	err := os.WriteFile(ymlFilePath, []byte(golangciWinYmlTemplate), 0o600)
+	if err != nil {
+		return fmt.Errorf("error creating golangci_win.yml: %w", err)
+	}
+	return nil
+}
+
+func createGolangciYml(folderPath string) error {
+	ymlFilePath := filepath.Join(folderPath, "golangci.yml")
+	err := os.WriteFile(ymlFilePath, []byte(golangciYmlTemplate), 0o600)
+	if err != nil {
+		return fmt.Errorf("error creating golangci.yml: %w", err)
+	}
+	return nil
+}
+
+func createAnalyzeScripts(folderPath string) error {
+	err1 := createAnalyzeBatchFile(folderPath)
+	err2 := createAnalyzeShellScript(folderPath)
+	err3 := createGolangciWinYml(folderPath)
+	err4 := createGolangciYml(folderPath)
+	return errors.Join(err1, err2, err3, err4)
 }
