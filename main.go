@@ -1,3 +1,6 @@
+// Package main provides VasGoTools - a utility tool for managing Go projects.
+// This application provides commands to simplify the creation and management of Go projects,
+// including generating Go workspaces, applications, and libraries.
 package main
 
 import (
@@ -98,7 +101,10 @@ func generateWorkCommand(args []string) {
 	// Define a flag set for the "work" command
 	fs := flag.NewFlagSet("work", flag.ExitOnError)
 	folderPath := fs.String("path", "", "Path to the folder (defaults to current working directory)")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		fmt.Println("Error parsing flags:", err)
+		return
+	}
 
 	// Check for optional flags
 	noGit, noCode := parseOptionalFlags(fs.Args())
@@ -167,6 +173,7 @@ func generateWorkCommand(args []string) {
 	// Run the "go work init" command with the relative paths
 	if len(goModFolders) > 0 {
 		args := append([]string{"work", "init"}, goModFolders...)
+		//nolint:gosec // G204: Safe usage - args are controlled by the application
 		cmd := exec.Command("go", args...)
 		cmd.Dir = *folderPath // Set the working directory to the root folder
 		cmd.Stdout = os.Stdout
@@ -270,6 +277,7 @@ func addGitSubmodules(rootPath string) error {
 			}
 
 			// Add the Git repository as a submodule
+			//nolint:gosec // G204: Safe usage - submodulePath and relativePath are controlled by the application
 			cmd := exec.Command("git", "submodule", "add", submodulePath, relativePath)
 			cmd.Dir = rootPath
 			cmd.Stdout = os.Stdout
@@ -292,7 +300,10 @@ func generateModuleCommand(args []string, isLibrary bool) {
 	fs := flag.NewFlagSet("app", flag.ExitOnError)
 	folderPath := fs.String("path", "", "Path to create the application or library folder (defaults to current working directory)")
 	modulePrefixCmd := fs.String("module-prefix", "none", "Specify the module prefix (default: none, shortcuts: 'vas' for muellerbbm-vas, 'slb' for mbbm-slb)")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		fmt.Println("Error parsing flags:", err)
+		return
+	}
 
 	// Determine the module prefix
 	var modulePrefix string
@@ -328,7 +339,7 @@ func generateModuleCommand(args []string, isLibrary bool) {
 
 	// Create the folder
 	folder := filepath.Join(*folderPath, name)
-	err = os.MkdirAll(folder, 0755)
+	err = os.MkdirAll(folder, 0o750)
 	if err != nil {
 		fmt.Println("Error creating folder:", err)
 		return
@@ -336,6 +347,7 @@ func generateModuleCommand(args []string, isLibrary bool) {
 
 	// Run the "go mod init" command
 	fullName := modulePrefix + name
+	//nolint:gosec // G204: Safe usage - module name is controlled by the application
 	cmd := exec.Command("go", "mod", "init", fullName)
 	cmd.Dir = folder
 	cmd.Stdout = os.Stdout
@@ -360,7 +372,7 @@ func generateModuleCommand(args []string, isLibrary bool) {
 
 		// Create the main.go file from the embedded template
 		mainGoPath := filepath.Join(folder, "main.go")
-		err = os.WriteFile(mainGoPath, []byte(mainGoTemplate), 0644)
+		err = os.WriteFile(mainGoPath, []byte(mainGoTemplate), 0o600)
 		if err != nil {
 			fmt.Println("Error writing main.go:", err)
 			return
@@ -426,13 +438,14 @@ func generateModuleCommand(args []string, isLibrary bool) {
 }
 
 // parseOptionalFlags parses the optional "nogit" and "nocode" flags from the arguments.
-func parseOptionalFlags(args []string) (bool, bool) {
-	noGit := false
-	noCode := false
+func parseOptionalFlags(args []string) (noGit, noCode bool) {
+	noGit = false
+	noCode = false
 	for _, arg := range args {
-		if arg == "nogit" {
+		switch arg {
+		case "nogit":
 			noGit = true
-		} else if arg == "nocode" {
+		case "nocode":
 			noCode = true
 		}
 	}
@@ -464,11 +477,12 @@ func initializeGitRepository(folderPath string) error {
 func createOpenVSCodeBatchFile(folderPath string) error {
 	batchFilePath := filepath.Join(folderPath, openVSCodeBatchFile)
 	batchFileContent := "code . | exit 0\n"
-	return os.WriteFile(batchFilePath, []byte(batchFileContent), 0644)
+	return os.WriteFile(batchFilePath, []byte(batchFileContent), 0o600)
 }
 
 func executeOpenVSCodeBatchFile(folderPath string) error {
 	batchFilePath := filepath.Join(folderPath, openVSCodeBatchFile)
+	//nolint:gosec // G204: Safe usage - batchFilePath is controlled by the application
 	cmd := exec.Command("cmd", "/C", batchFilePath)
 	cmd.Dir = folderPath
 	cmd.Stdout = os.Stdout
@@ -481,7 +495,8 @@ func executeOpenVSCodeBatchFile(folderPath string) error {
 func createOpenVSCodeShellScript(folderPath string) error {
 	scriptFilePath := filepath.Join(folderPath, openVSCodeShellFile)
 	scriptContent := "#!/bin/bash\ncode . || exit 0\n"
-	err := os.WriteFile(scriptFilePath, []byte(scriptContent), 0755) // Make the script executable
+	//nolint:gosec // G306: Script needs to be executable
+	err := os.WriteFile(scriptFilePath, []byte(scriptContent), 0o700) // Make the script executable
 	if err != nil {
 		return fmt.Errorf("error creating open_vscode.sh: %w", err)
 	}
@@ -490,6 +505,7 @@ func createOpenVSCodeShellScript(folderPath string) error {
 
 func executeOpenVSCodeShellScript(folderPath string) error {
 	scriptFilePath := filepath.Join(folderPath, openVSCodeShellFile)
+	//nolint:gosec // G204: Safe usage - scriptFilePath is controlled by the application
 	cmd := exec.Command("bash", scriptFilePath)
 	cmd.Dir = folderPath
 	cmd.Stdout = os.Stdout
@@ -508,14 +524,13 @@ func createOpenVSCodeFile(folderPath string) error {
 func executeOpenVSCodeFile(folderPath string) error {
 	if runtime.GOOS == "windows" {
 		return executeOpenVSCodeBatchFile(folderPath)
-	} else {
-		return executeOpenVSCodeShellScript(folderPath)
 	}
+	return executeOpenVSCodeShellScript(folderPath)
 }
 
 func createBuildBatchFile(folderPath string) error {
 	batchFilePath := filepath.Join(folderPath, "build.bat")
-	err := os.WriteFile(batchFilePath, []byte(buildBatTemplate), 0644)
+	err := os.WriteFile(batchFilePath, []byte(buildBatTemplate), 0o600)
 	if err != nil {
 		return fmt.Errorf("error creating build.bat: %w", err)
 	}
@@ -524,7 +539,8 @@ func createBuildBatchFile(folderPath string) error {
 
 func createBuildShellScript(folderPath string) error {
 	scriptFilePath := filepath.Join(folderPath, "build.sh")
-	err := os.WriteFile(scriptFilePath, []byte(buildShTemplate), 0755) // Make the script executable
+	//nolint:gosec // G306: Script needs to be executable
+	err := os.WriteFile(scriptFilePath, []byte(buildShTemplate), 0o700) // Make the script executable
 	if err != nil {
 		return fmt.Errorf("error creating build.sh: %w", err)
 	}
