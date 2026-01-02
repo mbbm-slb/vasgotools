@@ -14,6 +14,8 @@ import (
 const (
 	openVSCodeBatchFile = "open_vscode.bat"
 	openVSCodeShellFile = "open_vscode.sh"
+	modulePrefixMbbVas = "github.com/muellerbbm-vas/"
+	modulePrefixMbbmSlb = "github.com/mbbm-slb/"
 )
 
 // Embed the template files
@@ -267,8 +269,21 @@ func generateModuleCommand(args []string, isLibrary bool) {
 	// Define a flag set for the "generate-app" or "generate-lib" command
 	fs := flag.NewFlagSet("generate-app", flag.ExitOnError)
 	folderPath := fs.String("path", "", "Path to create the application or library folder (defaults to current working directory)")
-	modulePrefix := fs.String("module-prefix", "github.com/muellerbbm-vas/", "Specify the module prefix (default: github.com/muellerbbm-vas/)")
+	modulePrefixCmd := fs.String("module-prefix", "none", "Specify the module prefix (default: none, shortcuts: 'vas' for muellerbbm-vas, 'slb' for mbbm-slb)")
 	fs.Parse(args)
+
+	// Determine the module prefix
+	var modulePrefix string
+	if *modulePrefixCmd != "none" {
+		switch *modulePrefixCmd {
+		case "vas":
+			modulePrefix = modulePrefixMbbVas
+		case "slb":
+			modulePrefix = modulePrefixMbbmSlb
+		default:
+			modulePrefix = *modulePrefixCmd
+		}
+	}
 
 	// Ensure the application or library name is provided as the first positional argument
 	if fs.NArg() < 1 {
@@ -298,7 +313,7 @@ func generateModuleCommand(args []string, isLibrary bool) {
 	}
 
 	// Run the "go mod init" command
-	fullName := *modulePrefix + name
+	fullName := modulePrefix + name
 	cmd := exec.Command("go", "mod", "init", fullName)
 	cmd.Dir = folder
 	cmd.Stdout = os.Stdout
