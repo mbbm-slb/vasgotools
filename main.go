@@ -32,6 +32,12 @@ var buildBatTemplate string
 //go:embed build.sh
 var buildShTemplate string
 
+//go:embed cross-build.bat
+var crossBuildBatTemplate string
+
+//go:embed cross-build.sh
+var crossBuildShTemplate string
+
 //go:embed main.go.template
 var mainGoTemplate string
 
@@ -618,6 +624,31 @@ func createBuildScript(folderPath string) error {
 	return errors.Join(err1, err2)
 }
 
+func createCrossBuildBatchFile(folderPath string) error {
+	batchFilePath := filepath.Join(folderPath, "cross-build.bat")
+	err := os.WriteFile(batchFilePath, []byte(crossBuildBatTemplate), 0o600)
+	if err != nil {
+		return fmt.Errorf("error creating cross-build.bat: %w", err)
+	}
+	return nil
+}
+
+func createCrossBuildShellScript(folderPath string) error {
+	scriptFilePath := filepath.Join(folderPath, "cross-build.sh")
+	//nolint:gosec // G306: Script needs to be executable
+	err := os.WriteFile(scriptFilePath, []byte(crossBuildShTemplate), 0o700) // Make the script executable
+	if err != nil {
+		return fmt.Errorf("error creating cross-build.sh: %w", err)
+	}
+	return nil
+}
+
+func createCrossBuildScript(folderPath string) error {
+	err1 := createCrossBuildBatchFile(folderPath)
+	err2 := createCrossBuildShellScript(folderPath)
+	return errors.Join(err1, err2)
+}
+
 func createGolangciWinYml(folderPath string) error {
 	ymlFilePath := filepath.Join(folderPath, "golangci_win.yml")
 	err := os.WriteFile(ymlFilePath, []byte(golangciWinYmlTemplate), 0o600)
@@ -638,9 +669,10 @@ func createGolangciYml(folderPath string) error {
 
 func createScripts(folderPath string) error {
 	err1 := createBuildScript(folderPath)
-	err2 := createGolangciWinYml(folderPath)
-	err3 := createGolangciYml(folderPath)
-	return errors.Join(err1, err2, err3)
+	err2 := createCrossBuildScript(folderPath)
+	err3 := createGolangciWinYml(folderPath)
+	err4 := createGolangciYml(folderPath)
+	return errors.Join(err1, err2, err3, err4)
 }
 
 func createLicenseFile(folderPath string) error {
