@@ -1,3 +1,4 @@
+// TODO: a package comment should go here or in a separate doc.go file
 package main
 
 import (
@@ -5,12 +6,43 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 )
 
-var gitVersionInfo string
+func getVersionString() string {
+	version := "unknown version"
 
-func printVersion() {
-	fmt.Println(gitVersionInfo)
+	// Try to read build info from the binary
+	if info, ok := debug.ReadBuildInfo(); ok {
+		// Use the module version if available (from go install)
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			version = info.Main.Version
+		}
+
+		// Try to get version from VCS info (Git)
+		var revision, modified string
+		for _, setting := range info.Settings {
+			switch setting.Key {
+			case "vcs.revision":
+				revision = setting.Value
+			case "vcs.modified":
+				modified = setting.Value
+			}
+		}
+
+		// Append VCS info if available
+		if revision != "" {
+			shortRev := revision
+			if len(revision) > 7 {
+				shortRev = revision[:7]
+			}
+			version = fmt.Sprintf("%s (commit: %s)", version, shortRev)
+			if modified == "true" {
+				version += " [modified]"
+			}
+		}
+	}
+	return version
 }
 
 func main() {
@@ -27,7 +59,7 @@ func main() {
 	flag.Usage = func() {
 		w := flag.CommandLine.Output() // may be os.Stderr - but not necessarily
 
-		fmt.Fprintf(w, "\n %s (%s): An application prototype.\n\n", appName, gitVersionInfo)
+		fmt.Fprintf(w, "\n %s (%s): An application prototype.\n\n", appName, getVersionString())
 
 		flag.PrintDefaults()
 	}
@@ -44,12 +76,12 @@ func main() {
 	// print version info and exit if requested
 	// =================================================================================================
 	if *doPrintVersionInfo {
-		printVersion()
+		fmt.Println("Version: ", getVersionString())
 		return
 	}
 
 	// =================================================================================================
 	// TODO: relevant code goes here
 	// =================================================================================================
-    fmt.Println("Hello, World!")
+	fmt.Println("Hello, World!")
 }

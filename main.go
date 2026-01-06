@@ -12,6 +12,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
+	"strings"
+	"time"
 )
 
 const (
@@ -23,26 +26,23 @@ const (
 
 // Embed the template files
 
-//go:embed build.bat.template
+//go:embed build.bat
 var buildBatTemplate string
 
-//go:embed build.sh.template
+//go:embed build.sh
 var buildShTemplate string
 
 //go:embed main.go.template
 var mainGoTemplate string
-
-//go:embed analyze.bat
-var analyzeBatTemplate string
-
-//go:embed analyze.sh
-var analyzeShTemplate string
 
 //go:embed golangci_win.yml
 var golangciWinYmlTemplate string
 
 //go:embed golangci.yml
 var golangciYmlTemplate string
+
+//go:embed LICENSE
+var licenseTemplate string
 
 func main() {
 	// Ensure a subcommand is provided
@@ -59,6 +59,12 @@ func main() {
 		generateModuleCommand(os.Args[2:], false)
 	case "lib":
 		generateModuleCommand(os.Args[2:], true)
+	case "help", "--help", "-h":
+		printUsage()
+		os.Exit(0)
+	case "version", "--version", "-v":
+		fmt.Println("Version: ", getVersionString())
+		os.Exit(0)
 	default:
 		fmt.Printf("Unknown command: %s\n", os.Args[1])
 		printUsage()
@@ -66,8 +72,46 @@ func main() {
 	}
 }
 
+func getVersionString() string {
+	version := "unknown version"
+
+	// Try to read build info from the binary
+	if info, ok := debug.ReadBuildInfo(); ok {
+		// Use the module version if available (from go install)
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			version = info.Main.Version
+		}
+
+		// Try to get version from VCS info (Git)
+		var revision, modified string
+		for _, setting := range info.Settings {
+			switch setting.Key {
+			case "vcs.revision":
+				revision = setting.Value
+			case "vcs.modified":
+				modified = setting.Value
+			}
+		}
+
+		// Append VCS info if available
+		if revision != "" {
+			shortRev := revision
+			if len(revision) > 7 {
+				shortRev = revision[:7]
+			}
+			version = fmt.Sprintf("%s (commit: %s)", version, shortRev)
+			if modified == "true" {
+				version += " [modified]"
+			}
+		}
+	}
+	return version
+}
+
 func printUsage() {
 	fmt.Println("VasGoTools - A utility tool for managing Go projects")
+	fmt.Println()
+	fmt.Println("Version: ", getVersionString())
 	fmt.Println()
 	fmt.Println("This application provides commands to simplify the creation and management of Go projects,")
 	fmt.Println("including generating Go workspaces, applications, and libraries.")
@@ -373,22 +417,23 @@ func generateModuleCommand(args []string, isLibrary bool) {
 	}
 
 	// Create analyze scripts and golangci-lint config files
-	err = createAnalyzeScripts(folder)
+	err = createScripts(folder)
 	if err != nil {
 		fmt.Println("Error creating analyze scripts:", err)
 		return
 	}
 	fmt.Println("Analyze scripts and configuration files created successfully.")
 
+	// Create LICENSE file
+	err = createLicenseFile(folder)
+	if err != nil {
+		fmt.Println("Error creating LICENSE file:", err)
+		return
+	}
+	fmt.Println("LICENSE file created successfully.")
+
 	// Write main.go from the embedded template (if not suppressed)
 	if !noMain {
-
-		// Write build.bat from the embedded template
-		err = createBuildScript(folder)
-		if err != nil {
-			return
-		}
-		fmt.Println("build script created successfully.")
 
 		// Create the main.go file from the embedded template
 		mainGoPath := filepath.Join(folder, "main.go")
@@ -573,25 +618,6 @@ func createBuildScript(folderPath string) error {
 	return errors.Join(err1, err2)
 }
 
-func createAnalyzeBatchFile(folderPath string) error {
-	batchFilePath := filepath.Join(folderPath, "analyze.bat")
-	err := os.WriteFile(batchFilePath, []byte(analyzeBatTemplate), 0o600)
-	if err != nil {
-		return fmt.Errorf("error creating analyze.bat: %w", err)
-	}
-	return nil
-}
-
-func createAnalyzeShellScript(folderPath string) error {
-	scriptFilePath := filepath.Join(folderPath, "analyze.sh")
-	//nolint:gosec // G306: Script needs to be executable
-	err := os.WriteFile(scriptFilePath, []byte(analyzeShTemplate), 0o700) // Make the script executable
-	if err != nil {
-		return fmt.Errorf("error creating analyze.sh: %w", err)
-	}
-	return nil
-}
-
 func createGolangciWinYml(folderPath string) error {
 	ymlFilePath := filepath.Join(folderPath, "golangci_win.yml")
 	err := os.WriteFile(ymlFilePath, []byte(golangciWinYmlTemplate), 0o600)
@@ -610,10 +636,21 @@ func createGolangciYml(folderPath string) error {
 	return nil
 }
 
-func createAnalyzeScripts(folderPath string) error {
-	err1 := createAnalyzeBatchFile(folderPath)
-	err2 := createAnalyzeShellScript(folderPath)
-	err3 := createGolangciWinYml(folderPath)
-	err4 := createGolangciYml(folderPath)
-	return errors.Join(err1, err2, err3, err4)
+func createScripts(folderPath string) error {
+	err1 := createBuildScript(folderPath)
+	err2 := createGolangciWinYml(folderPath)
+	err3 := createGolangciYml(folderPath)
+	return errors.Join(err1, err2, err3)
+}
+
+func createLicenseFile(folderPath string) error {
+	licenseFilePath := filepath.Join(folderPath, "LICENSE")
+	// Replace the year placeholder with the current year
+	currentYear := time.Now().Year()
+	licenseContent := strings.ReplaceAll(licenseTemplate, "2026", fmt.Sprintf("%d", currentYear))
+	err := os.WriteFile(licenseFilePath, []byte(licenseContent), 0o600)
+	if err != nil {
+		return fmt.Errorf("error creating LICENSE: %w", err)
+	}
+	return nil
 }
