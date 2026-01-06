@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 and this project adheres to Semantic Versioning (http://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-06
+### Added
+- LICENSE file is now embedded and automatically created during app/lib generation with current year
+- Cross-platform build scripts (cross-build.bat and cross-build.sh) for building executables for Windows, Linux, and macOS (Intel + Apple Silicon)
+- Cross-build scripts are now embedded and automatically deployed when creating apps/libs
+- Cross-build scripts are generic and derive binary names from the module name
+- Enhanced version detection using runtime/debug.ReadBuildInfo() for accurate version information when installed via go install
+- Version command now shows module version from Git tags, commit hash, and VCS modification status
+
 ## [0.3.0] - 2026-01-02
 ### Added
 - createOpenVSCodeFile and createBuildScript create artifacts for Windows and MacOS/Linux regardless the current operating system.
