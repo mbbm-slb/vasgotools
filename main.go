@@ -481,6 +481,14 @@ func generateModuleCommand(args []string, isLibrary bool) {
 		}
 		fmt.Println("Git repository initialized successfully.")
 
+		// Create .gitattributes file
+		err = createGitAttributesFile(folder)
+		if err != nil {
+			fmt.Println("Error creating .gitattributes file:", err)
+			return
+		}
+		fmt.Println(".gitattributes file created successfully.")
+
 		// Add all files and commit with message "init"
 		cmdAdd := exec.Command("git", "add", ".")
 		cmdAdd.Dir = folder
@@ -543,6 +551,39 @@ func initializeGitRepository(folderPath string) error {
 
 	fmt.Println("Initializing Git repository...")
 	return cmd.Run()
+}
+
+func createGitAttributesFile(folderPath string) error {
+	gitattributesPath := filepath.Join(folderPath, ".gitattributes")
+	gitattributesContent := `# Normalize line endings: store LF in repo, checkout with OS-native endings
+* text=auto
+
+# Go source files: always LF
+*.go text eol=lf
+
+# shell script files: always LF
+*.sh text eol=lf
+
+# JSON, Markdown, text files: always LF
+*.json text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+*.xml  text eol=lf
+*.atfx text eol=lf
+
+# Windows batch files: always CRLF
+*.bat text eol=crlf
+
+# Binary files: no line ending conversion
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.zip  binary
+*.exe  binary
+`
+	return os.WriteFile(gitattributesPath, []byte(gitattributesContent), 0o644)
 }
 
 func createOpenVSCodeBatchFile(folderPath string) error {
