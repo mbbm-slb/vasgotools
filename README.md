@@ -240,6 +240,11 @@ To skip VS Code integration:
 vasgotools.exe app myapp nocode
 ```
 
+## Install from Github
+```bash
+go install github.com/mbbm-slb/vasgotools@latest
+```
+
 ## License
 
 Copyright © 2026 Müller-BBM VibroAkustik Systeme GmbH. All rights reserved.
