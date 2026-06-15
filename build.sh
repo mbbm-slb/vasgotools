@@ -18,7 +18,10 @@ go mod verify
 echo ""
 echo "🔧 2. Build-Überprüfung..."
 echo "-------------------------"
-if go build ./...; then
+
+VERSION=$(git describe --tags)
+
+if go build -ldflags "-X main.version=$VERSION" ./...; then
     echo "✅ Build erfolgreich"
 else
     echo "❌ Build fehlgeschlagen"
@@ -128,3 +131,4 @@ echo "  - Behebe kritische Issues aus golangci-lint"
 echo "  - Überprüfe Vulnerabilities mit govulncheck"
 echo "  - Achte auf mindestens 80% Test-Coverage"
 echo "  - Verwende 'go fmt' für einheitliche Formatierung"
+echo "  - Version: $VERSION"

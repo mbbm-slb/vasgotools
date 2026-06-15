@@ -9,14 +9,22 @@ import (
 	"runtime/debug"
 )
 
-func getVersionString() string {
-	version := "unknown version"
+// version is set at build time via -ldflags "-X main.version=..."
+var version = "unknown version"
 
-	// Try to read build info from the binary
+func getVersionString() string {
+	// If version was set at build time, return it directly
+	if version != "unknown version" {
+		return version
+	}
+
+	// Fallback: Try to read build info from the binary
 	if info, ok := debug.ReadBuildInfo(); ok {
+		versionString := "unknown version"
+
 		// Use the module version if available (from go install)
 		if info.Main.Version != "" && info.Main.Version != "(devel)" {
-			version = info.Main.Version
+			versionString = info.Main.Version
 		}
 
 		// Try to get version from VCS info (Git)
@@ -36,11 +44,12 @@ func getVersionString() string {
 			if len(revision) > 7 {
 				shortRev = revision[:7]
 			}
-			version = fmt.Sprintf("%s (commit: %s)", version, shortRev)
+			versionString = fmt.Sprintf("%s (commit: %s)", versionString, shortRev)
 			if modified == "true" {
-				version += " [modified]"
+				versionString += " [modified]"
 			}
 		}
+		return versionString
 	}
 	return version
 }

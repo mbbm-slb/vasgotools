@@ -22,11 +22,17 @@ echo.
 REM Create output directory
 if not exist "bin" mkdir bin
 
+REM Get version information from git
+FOR /F "tokens=* USEBACKQ" %%F IN (`git describe --tags`) DO (
+SET GIT_VERSION_INFO=%%F
+)
+ECHO %GIT_VERSION_INFO%
+
 REM Build for Windows (amd64)
 echo Building for Windows (amd64)...
 set GOOS=windows
 set GOARCH=amd64
-go build -o bin\%BINARY_NAME%-windows-amd64.exe
+go build -ldflags "-X main.version=%GIT_VERSION_INFO%" -o bin\%BINARY_NAME%-windows-amd64.exe
 if %errorlevel% neq 0 (
     echo Failed to build for Windows amd64
     exit /b 1
@@ -36,7 +42,7 @@ REM Build for Linux (amd64)
 echo Building for Linux (amd64)...
 set GOOS=linux
 set GOARCH=amd64
-go build -o bin\%BINARY_NAME%-linux-amd64
+go build -ldflags "-X main.version=%GIT_VERSION_INFO%" -o bin\%BINARY_NAME%-linux-amd64
 if %errorlevel% neq 0 (
     echo Failed to build for Linux amd64
     exit /b 1
@@ -46,7 +52,7 @@ REM Build for macOS (amd64 - Intel)
 echo Building for macOS (amd64 - Intel)...
 set GOOS=darwin
 set GOARCH=amd64
-go build -o bin\%BINARY_NAME%-darwin-amd64
+go build -ldflags "-X main.version=%GIT_VERSION_INFO%" -o bin\%BINARY_NAME%-darwin-amd64
 if %errorlevel% neq 0 (
     echo Failed to build for macOS amd64
     exit /b 1
@@ -56,7 +62,7 @@ REM Build for macOS (arm64 - Apple Silicon)
 echo Building for macOS (arm64 - Apple Silicon)...
 set GOOS=darwin
 set GOARCH=arm64
-go build -o bin\%BINARY_NAME%-darwin-arm64
+go build -ldflags "-X main.version=%GIT_VERSION_INFO%" -o bin\%BINARY_NAME%-darwin-arm64
 if %errorlevel% neq 0 (
     echo Failed to build for macOS arm64
     exit /b 1

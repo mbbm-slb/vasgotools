@@ -19,7 +19,13 @@ go mod verify
 echo.
 echo [2] Build-Ueberpruefung...
 echo -------------------------
-go build ./...
+
+FOR /F "tokens=* USEBACKQ" %%F IN (`git describe --tags`) DO (
+SET GIT_VERSION_INFO=%%F
+)
+ECHO %GIT_VERSION_INFO%
+
+go build -ldflags "-X main.version=%GIT_VERSION_INFO%" ./...
 if errorlevel 1 (
     echo [X] Build fehlgeschlagen
     exit /b 1
